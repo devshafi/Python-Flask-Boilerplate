@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Todo List</title>
+    </head>
+    <body>
+        <h1>Todo List</h1>
+
+        <ul id="todo-list">
+            {% for todo in todos %}
+            <li>{{ todo['task'] }} {% if todo['done'] %}(Done){% endif %}</li>
+            {% endfor %}
+        </ul>
+
+        <form id="add-todo-form">
+            <input type="text" id="task" placeholder="Enter a new task" />
+            <button type="submit">Add</button>
+        </form>
+
+        <script>
+            const todoList = document.getElementById("todo-list");
+            const addTodoForm = document.getElementById("add-todo-form");
+            const taskInput = document.getElementById("task");
+
+            function fetchTodos() {
+                fetch("/api/todos")
+                    .then((response) => response.json())
+                    .then((data) => {
+                        todoList.innerHTML = "";
+                        data.forEach((todo) => {
+                            const listItem = document.createElement("li");
+                            listItem.textContent = `${todo.task} ${todo.done ? "(Done)" : ""}`;
+                            todoList.appendChild(listItem);
+                        });
+                    });
+            }
+
+            addTodoForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const task = taskInput.value;
+                if (task.trim() !== "") {
+                    fetch("/api/todos", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ task }),
+                    })
+                        .then((response) => response.json())
+                        .then(() => {
+                            taskInput.value = "";
+                            fetchTodos();
+                        });
+                }
+            });
+
+            // Initial fetch of todos
+            fetchTodos();
+        </script>
+    </body>
+</html>
